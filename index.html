@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PLANILHA DE ATENDIMENTO</title>
+  <!-- Carregamento do Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Carregamento do CSS externo -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="p-4 md:p-8">
+
+<!-- TELA DE LOGIN (Mostrada por padrão) -->
+<div id="loginScreen" class="flex items-center justify-center min-h-screen">
+  <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl">
+    <h2 class="text-3xl font-extrabold text-gray-900 mb-6 uppercase text-center flex items-center justify-center space-x-3">
+      <img src="https://placehold.co/40x40/4f46e5/ffffff?text=🦷"
+           alt="LOGO DA CLÍNICA - DENTE"
+           class="w-10 h-10 rounded-full shadow-lg"
+           onerror="this.onerror=null; this.src='https://placehold.co/40x40/6366f1/ffffff?text=CL';" />
+      <span>ACESSO AO AGENDAMENTO</span>
+    </h2>
+
+    <form id="loginForm" class="space-y-6">
+      <div>
+        <label for="username" class="block text-sm font-medium text-gray-700 uppercase">USUÁRIO</label>
+        <input type="text" id="username" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+      </div>
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700 uppercase">SENHA</label>
+        <input type="password" id="password" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+      </div>
+
+      <p id="errorMessage" class="text-red-600 text-sm text-center font-semibold hidden uppercase">
+        USUÁRIO OU SENHA INVÁLIDOS. TENTE NOVAMENTE.
+      </p>
+
+      <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-lg shadow-md hover:bg-indigo-700 transition duration-150 uppercase">
+        ENTRAR
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- CONTEÚDO PRINCIPAL (Oculto até o login ser bem-sucedido) -->
+<div id="appContainer" class="max-w-7xl mx-auto bg-white shadow-xl rounded-xl p-4 md:p-8" style="display: none;">
+
+  <h1 class="text-3xl font-extrabold text-gray-900 mb-6 uppercase text-center md:text-left flex items-center justify-center md:justify-start space-x-3">
+    <img src="https://placehold.co/40x40/4f46e5/ffffff?text=🦷"
+         alt="LOGO DA CLÍNICA - DENTE"
+         class="w-10 h-10 rounded-full shadow-lg"
+         onerror="this.onerror=null; this.src='https://placehold.co/40x40/6366f1/ffffff?text=CL';" />
+    <span>PLANILHA DE AGENDAMENTO</span>
+  </h1>
+  <p class="text-sm text-gray-500 mb-8 text-center md:text-left">
+    PREENCHA OS ATENDIMENTOS ABAIXO. HORÁRIOS DUPLICADOS SERÃO DESTACADOS EM LARANJA.
+  </p>
+
+  <div class="overflow-x-auto">
+    <table id="scheduleTable" class="schedule-table">
+      <thead>
+      <tr>
+        <th class="w-1/6">DIA</th>
+        <th class="w-1/6">HORÁRIO</th>
+        <th class="w-2/6">NOME DO PACIENTE</th>
+        <th class="w-2/6">PROCEDIMENTO</th>
+      </tr>
+      </thead>
+      <tbody id="scheduleBody">
+      <!-- LINHAS SERÃO INSERIDAS AQUI PELO JAVASCRIPT -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-8 flex justify-end space-x-4">
+    <!-- BOTÕES DE AÇÃO -->
+    <button id="sortButton" class="px-6 py-3 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600 transition duration-150 uppercase">
+      REORGANIZAR POR DATA
+    </button>
+    <button id="addRowButton" class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-150 uppercase">
+      ADICIONAR NOVO AGENDAMENTO
+    </button>
+  </div>
+</div>
+
+<!-- Carregamento do JavaScript com a lógica e Firebase -->
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

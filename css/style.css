@@ -1,0 +1,28 @@
+/* Define a fonte e remove margens */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f3f4f6;
+  padding: 20px;
+}
+/* Estilo para a tabela */
+.schedule-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.schedule-table th, .schedule-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+.schedule-table th {
+  background-color: #1f2937; /* Cinza Escuro */
+  color: white;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+/* Arredondamento para os cantos da tabela */
+.schedule-table thead tr:first-child th:first-child { border-top-left-radius: 0.5rem; }
+.schedule-table thead tr:first-child th:last-child { border-top-right-radius: 0.5rem; }
+.schedule-table tbody tr:last-child td:first-child { border-bottom-left-radius: 0.5rem; }
+.schedule-table tbody tr:last-child td:last-child { border-bottom-right-radius: 0.5rem; }

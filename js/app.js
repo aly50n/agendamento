@@ -1,42 +1,9 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-window.firebaseApp = null;
-window.firebaseAuth = null;
-window.firebaseDb = null;
-window.currentUserId = null;
+window.scheduleData = [];
 
-async function setupAuth() {
-  try {
-    const app = initializeApp(firebaseConfig);
-    window.firebaseApp = app;
-    window.firebaseDb = getFirestore(app);
-    window.firebaseAuth = getAuth(app);
-
-    if (initialAuthToken) {
-      const userCredential = await signInWithCustomToken(window.firebaseAuth, initialAuthToken);
-      window.currentUserId = userCredential.user.uid;
-    } else {
-      const userCredential = await signInAnonymously(window.firebaseAuth);
-      window.currentUserId = userCredential.user.uid;
-    }
-    console.log('FIREBASE AUTH SETUP CONCLUÍDO. USER ID:', window.currentUserId);
-  } catch (error) {
-    console.error("FALHA NA AUTENTICAÇÃO FIREBASE:", error);
-    window.currentUserId = crypto.randomUUID();
-  }
-}
-
-// Executa a configuração de autenticação ao carregar o script
-setupAuth();
-
-
-// REFERÊNCIAS DE ELEMENTOS
 const loginScreen = document.getElementById('loginScreen');
 const appContainer = document.getElementById('appContainer');
 const loginForm = document.getElementById('loginForm');
@@ -46,12 +13,35 @@ const addRowButton = document.getElementById('addRowButton');
 const sortButton = document.getElementById('sortButton');
 
 
-const USERNAME_CORRETO = 'tainara';
-const PASSWORD_CORRETA = '2026';
+const USN = 'tai';
+const PSW = '2026';
 
-/**
- * LÓGICA DE LOGIN
- */
+
+
+function saveScheduleToLocalStorage() {
+  try {
+    const dataToSave = JSON.stringify(window.scheduleData);
+    // CHAVE ÚNICA PARA ARMAZENAMENTO NO LOCALSTORAGE
+    localStorage.setItem('tainara_schedule_v1', dataToSave);
+    console.log("DADOS SALVOS NO LOCALSTORAGE.");
+  } catch (e) {
+    console.error("ERRO AO SALVAR NO LOCALSTORAGE:", e);
+  }
+}
+
+
+function loadScheduleFromLocalStorage() {
+  try {
+    const savedData = localStorage.getItem('tainara_schedule_v1');
+    return savedData ? JSON.parse(savedData) : [];
+  } catch (e) {
+    console.error("ERRO AO CARREGAR DO LOCALSTORAGE:", e);
+    return [];
+  }
+}
+
+
+
 if (loginForm) {
   loginForm.addEventListener('submit', function(event) {
     event.preventDefault();
@@ -59,14 +49,15 @@ if (loginForm) {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
 
-    if (username === USERNAME_CORRETO && password === PASSWORD_CORRETA) {
-      // SUCESSO NO LOGIN: Esconde a tela de login e mostra o aplicativo
+    if (username === USN && password === PSW) {
+
       loginScreen.style.display = 'none';
       appContainer.style.display = 'block';
-      // Inicializa as linhas da tabela
+
+
       initializeSchedule();
     } else {
-      // FALHA NO LOGIN: Mostra a mensagem de erro
+
       errorMessage.classList.remove('hidden');
       setTimeout(() => errorMessage.classList.add('hidden'), 3000); // Esconde após 3 segundos
     }
@@ -74,13 +65,6 @@ if (loginForm) {
 }
 
 
-/**
- * FUNÇÕES DO AGENDAMENTO
- */
-
-/**
- * FUNÇÃO PARA GERAR OS SLOTS DE HORÁRIO DE 30 EM 30 MINUTOS (07:00h ÀS 21:00h)
- */
 function generateTimeSlots() {
   const slots = [];
   let time = new Date(1970, 0, 1, 7, 0, 0);
@@ -97,49 +81,80 @@ function generateTimeSlots() {
 
 const TIME_SLOTS = generateTimeSlots();
 
-/**
- * ATUALIZA O DESTAQUE DE CONFLITOS DE HORÁRIO (DIA E HORA).
- */
 function updateConflictHighlighting() {
-  const timeSelectors = document.querySelectorAll('#scheduleBody select[data-column="HORARIO"]');
+  // A lógica de conflito usa os dados em memória (window.scheduleData)
   const timeCounts = {};
 
-  timeSelectors.forEach(select => {
-    const selectedTime = select.value;
-    const row = select.closest('tr');
-    const dateInput = row.querySelector('input[type="date"]');
-    const selectedDate = dateInput ? dateInput.value : 'NODATE';
-
-    if (selectedTime) {
-      const key = `${selectedDate}_${selectedTime}`;
+  window.scheduleData.forEach(item => {
+    if (item.dia && item.horario) {
+      const key = `${item.dia}_${item.horario}`;
       timeCounts[key] = (timeCounts[key] || 0) + 1;
     }
   });
 
-  timeSelectors.forEach(select => {
-    const selectedTime = select.value;
-    const cell = select.closest('td');
-    const row = select.closest('tr');
-    const dateInput = row.querySelector('input[type="date"]');
-    const selectedDate = dateInput ? dateInput.value : 'NODATE';
+  document.querySelectorAll('#scheduleBody tr').forEach(row => {
+    const itemId = row.dataset.itemId;
+    const item = window.scheduleData.find(d => d.id === itemId);
+    const cell = row.querySelector('td[data-column="HORARIO"]');
 
-    if (selectedTime) {
-      const key = `${selectedDate}_${selectedTime}`;
+    if (item && cell) {
+      const key = `${item.dia}_${item.horario}`;
+
       if (timeCounts[key] > 1) {
-        cell.classList.add('bg-orange-100');
-        cell.classList.add('border-orange-400');
+        cell.classList.add('bg-orange-100', 'border-orange-400');
       } else {
-        cell.classList.remove('bg-orange-100');
-        cell.classList.remove('border-orange-400');
+        cell.classList.remove('bg-orange-100', 'border-orange-400');
       }
-    } else {
-      cell.classList.remove('bg-orange-100');
-      cell.classList.remove('border-orange-400');
     }
   });
 }
 
-function createTimeSelect() {
+/**
+ * @param {string} itemId ID do item a ser atualizado.
+ * @param {string} fieldName Nome do campo a ser modificado.
+ * @param {string} value Novo valor.
+ */
+function updateAndPersist(itemId, fieldName, value) {
+  const itemIndex = window.scheduleData.findIndex(d => d.id === itemId);
+  if (itemIndex > -1) {
+    window.scheduleData[itemIndex][fieldName] = value;
+    // Salva e re-renderiza para aplicar ordenação e destaques
+    saveScheduleToLocalStorage();
+    sortAndRenderSchedule(window.scheduleData);
+  }
+}
+
+
+/**
+ * @param {string} type Tipo do input ('text', 'date')
+ * @param {string} initialValue Valor inicial
+ * @param {string} itemId ID do item
+ * @param {string} fieldName Nome do campo no objeto de agendamento
+ */
+function createInput(type, initialValue, itemId, fieldName) {
+  const input = document.createElement('input');
+  input.type = type;
+  input.className = 'w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 transition duration-150';
+
+  if (type === 'date') {
+    input.value = initialValue || new Date().toISOString().substring(0, 10);
+  } else {
+    input.value = initialValue || '';
+  }
+
+
+  input.addEventListener('change', () => {
+    updateAndPersist(itemId, fieldName, input.value);
+  });
+
+  return input;
+}
+
+/**
+ * @param {string} initialValue Valor inicial
+ * @param {string} itemId ID do item
+ */
+function createTimeSelect(initialValue, itemId) {
   const select = document.createElement('select');
   select.className = 'w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 transition duration-150';
   select.setAttribute('data-column', 'HORARIO');
@@ -153,53 +168,50 @@ function createTimeSelect() {
     const option = document.createElement('option');
     option.value = time;
     option.textContent = time;
+    if (time === initialValue) {
+      option.selected = true;
+    }
     select.appendChild(option);
   });
 
-  select.addEventListener('change', updateConflictHighlighting);
+
+  select.addEventListener('change', () => {
+    updateAndPersist(itemId, 'horario', select.value);
+  });
 
   return select;
 }
 
-function createInput(type = 'text') {
-  const input = document.createElement('input');
-  input.type = type;
-  input.className = 'w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 transition duration-150';
-
-  if (type === 'date') {
-    input.valueAsDate = new Date();
-    input.addEventListener('change', updateConflictHighlighting);
-  }
-  return input;
-}
-
-function addRow() {
-  if (!scheduleBody) return;
-
+/**
+ * @param {object} entry Objeto de agendamento (inclui id)
+ */
+function createRowElement(entry) {
   const tr = document.createElement('tr');
   tr.className = 'hover:bg-gray-50 transition duration-100';
+  tr.dataset.itemId = entry.id; // Armazena o ID do item na linha
 
 
   const tdDia = document.createElement('td');
-  tdDia.appendChild(createInput('date'));
+  tdDia.appendChild(createInput('date', entry.dia, entry.id, 'dia'));
   tdDia.setAttribute('data-column', 'DIA');
   tr.appendChild(tdDia);
 
 
   const tdHorario = document.createElement('td');
-  tdHorario.appendChild(createTimeSelect());
+  tdHorario.appendChild(createTimeSelect(entry.horario, entry.id));
   tdHorario.setAttribute('data-column', 'HORARIO');
+
   tr.appendChild(tdHorario);
 
 
   const tdPaciente = document.createElement('td');
-  tdPaciente.appendChild(createInput('text'));
+  tdPaciente.appendChild(createInput('text', entry.paciente, entry.id, 'paciente'));
   tdPaciente.setAttribute('data-column', 'PACIENTE');
   tr.appendChild(tdPaciente);
 
 
   const tdProcedimento = document.createElement('td');
-  tdProcedimento.appendChild(createInput('text'));
+  tdProcedimento.appendChild(createInput('text', entry.procedimento, entry.id, 'procedimento'));
   tdProcedimento.setAttribute('data-column', 'PROCEDIMENTO');
   tr.appendChild(tdProcedimento);
 
@@ -209,67 +221,109 @@ function addRow() {
   const deleteButton = document.createElement('button');
   deleteButton.textContent = 'EXCLUIR';
   deleteButton.className = 'px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition duration-150 uppercase';
+
+
   deleteButton.addEventListener('click', () => {
-    tr.remove();
-    updateConflictHighlighting();
+    const itemIndex = window.scheduleData.findIndex(d => d.id === entry.id);
+    if (itemIndex > -1) {
+      window.scheduleData.splice(itemIndex, 1); // Remove da memória
+      saveScheduleToLocalStorage(); // Salva
+      sortAndRenderSchedule(window.scheduleData); // Re-renderiza
+    }
   });
+
   tdAcao.appendChild(deleteButton);
   tr.appendChild(tdAcao);
 
-  scheduleBody.appendChild(tr);
+  return tr;
 }
 
-function sortSchedule() {
+
+
+function addRow() {
+  const defaultDate = new Date().toISOString().substring(0, 10);
+  const newEntry = {
+
+    id: `schedule-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    dia: defaultDate,
+    horario: '',
+    paciente: '',
+    procedimento: '',
+    createdAt: Date.now()
+  };
+
+  window.scheduleData.push(newEntry);
+  saveScheduleToLocalStorage(); // Salva
+  sortAndRenderSchedule(window.scheduleData); // Re-renderiza para posicionar a nova linha
+}
+
+
+function sortAndRenderSchedule(data) {
   if (!scheduleBody) return;
 
-  const rows = Array.from(scheduleBody.querySelectorAll('tr'));
 
-  rows.sort((a, b) => {
-    const dateInputA = a.querySelector('td[data-column="DIA"] input[type="date"]');
-    const dateA = dateInputA ? dateInputA.value : null;
-    const timeA = a.querySelector('td[data-column="HORARIO"] select').value;
+  const sortedData = [...data].sort((a, b) => {
 
-    const dateInputB = b.querySelector('td[data-column="DIA"] input[type="date"]');
-    const dateB = dateInputB ? dateInputB.value : null;
-    const timeB = b.querySelector('td[data-column="HORARIO"] select').value;
+    const getSortableValue = (value) => (value || 'zzzzzzzzzz').toLowerCase();
 
-    if (!dateA && !dateB) return 0;
-    if (!dateA) return 1;
-    if (!dateB) return -1;
+    const diaA = getSortableValue(a.dia);
+    const diaB = getSortableValue(b.dia);
 
-    if (dateA < dateB) return -1;
-    if (dateA > dateB) return 1;
 
-    if (!timeA && !timeB) return 0;
-    if (!timeA) return 1;
-    if (!timeB) return -1;
+    if (diaA < diaB) return -1;
+    if (diaA > diaB) return 1;
 
-    if (timeA < timeB) return -1;
-    if (timeA > timeB) return 1;
+    const horarioA = getSortableValue(a.horario);
+    const horarioB = getSortableValue(b.horario);
+
+    if (horarioA < horarioB) return -1;
+    if (horarioA > horarioB) return 1;
+
+
+    if (a.createdAt < b.createdAt) return -1;
+    if (a.createdAt > b.createdAt) return 1;
 
     return 0;
   });
 
+
   scheduleBody.innerHTML = '';
-  rows.forEach(row => scheduleBody.appendChild(row));
+  sortedData.forEach(entry => {
+    scheduleBody.appendChild(createRowElement(entry));
+  });
+
 
   updateConflictHighlighting();
 }
 
-/**
- * FUNÇÃO PARA INICIALIZAR O AGENDAMENTO APÓS O LOGIN
- */
+
 function initializeSchedule() {
-  addRow();
-  addRow();
-  addRow();
+
+  const data = loadScheduleFromLocalStorage();
+  window.scheduleData = data;
+
+
+  const isFirstLoad = window.scheduleData.length === 0;
+
+
+  sortAndRenderSchedule(window.scheduleData);
+
+
+  if (isFirstLoad) {
+    console.log("PRIMEIRO CARREGAMENTO. ADICIONANDO 3 LINHAS VAZIAS.");
+    addRow();
+    addRow();
+    addRow();
+  }
 }
+
 
 document.addEventListener('DOMContentLoaded', () => {
   if (addRowButton) {
     addRowButton.addEventListener('click', addRow);
   }
   if (sortButton) {
-    sortButton.addEventListener('click', sortSchedule);
+
+    sortButton.addEventListener('click', () => sortAndRenderSchedule(window.scheduleData));
   }
 });

@@ -21,7 +21,6 @@ const PSW = '2026';
 function saveScheduleToLocalStorage() {
   try {
     const dataToSave = JSON.stringify(window.scheduleData);
-    // CHAVE ÚNICA PARA ARMAZENAMENTO NO LOCALSTORAGE
     localStorage.setItem('tainara_schedule_v1', dataToSave);
     console.log("DADOS SALVOS NO LOCALSTORAGE.");
   } catch (e) {

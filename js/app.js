@@ -19,9 +19,8 @@ function saveScheduleToLocalStorage() {
   try {
     const dataToSave = JSON.stringify(window.scheduleData);
     localStorage.setItem('tainara_schedule_v1', dataToSave);
-    console.log("DADOS SALVOS NO LOCALSTORAGE.");
   } catch (e) {
-    console.error("ERRO AO SALVAR NO LOCALSTORAGE:", e);
+    console.error("ERRO AO SALVAR:", e);
   }
 }
 
@@ -30,7 +29,7 @@ function loadScheduleFromLocalStorage() {
     const savedData = localStorage.getItem('tainara_schedule_v1');
     return savedData ? JSON.parse(savedData) : [];
   } catch (e) {
-    console.error("ERRO AO CARREGAR DO LOCALSTORAGE:", e);
+    console.error("ERRO AO CARREGAR:", e);
     return [];
   }
 }
@@ -96,6 +95,42 @@ function updateConflictHighlighting() {
   });
 }
 
+
+
+function applyDateColoring() {
+  const today = new Date();
+
+  document.querySelectorAll("#scheduleBody tr").forEach(row => {
+    const itemId = row.dataset.itemId;
+    const item = window.scheduleData.find(d => d.id === itemId);
+
+    if (!item || !item.dia) return;
+
+    const date = new Date(item.dia);
+    const diffTime = date.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    row.style.backgroundColor = "";
+
+    if (diffDays <= 5 && diffDays >= 0) {
+      const colors = {
+        5: "#ffb3b3",
+        4: "#ffc6c6",
+        3: "#ffd9d9",
+        2: "#ffeaea",
+        1: "#fff5f5",
+        0: "#fff2cc"
+      };
+
+      row.style.backgroundColor = colors[diffDays];
+    }
+  });
+}
+
+
+
+
+
 function updateAndPersist(itemId, fieldName, value) {
   const itemIndex = window.scheduleData.findIndex(d => d.id === itemId);
   if (itemIndex > -1) {
@@ -155,38 +190,33 @@ function createRowElement(entry) {
   tr.className = 'hover:bg-gray-50 transition duration-100';
   tr.dataset.itemId = entry.id;
 
-  // DIA
   const tdDia = document.createElement('td');
   tdDia.appendChild(createInput('date', entry.dia, entry.id, 'dia'));
   tdDia.setAttribute('data-column', 'DIA');
   tdDia.setAttribute('data-label', 'Dia');
   tr.appendChild(tdDia);
 
-  // HORÁRIO
   const tdHorario = document.createElement('td');
   tdHorario.appendChild(createTimeSelect(entry.horario, entry.id));
   tdHorario.setAttribute('data-column', 'HORARIO');
   tdHorario.setAttribute('data-label', 'Horário');
   tr.appendChild(tdHorario);
 
-  // PACIENTE
   const tdPaciente = document.createElement('td');
   tdPaciente.appendChild(createInput('text', entry.paciente, entry.id, 'paciente'));
   tdPaciente.setAttribute('data-column', 'PACIENTE');
   tdPaciente.setAttribute('data-label', 'Paciente');
   tr.appendChild(tdPaciente);
 
-  // PROCEDIMENTO
   const tdProcedimento = document.createElement('td');
   tdProcedimento.appendChild(createInput('text', entry.procedimento, entry.id, 'procedimento'));
   tdProcedimento.setAttribute('data-column', 'PROCEDIMENTO');
   tdProcedimento.setAttribute('data-label', 'Procedimento');
   tr.appendChild(tdProcedimento);
 
-  // AÇÃO (EXCLUIR)
   const tdAcao = document.createElement('td');
   tdAcao.className = 'w-1/12 text-center';
-  tdAcao.setAttribute('data-column', 'ACAO'); // ← para esconder no mobile
+  tdAcao.setAttribute('data-column', 'ACAO');
 
   const deleteButton = document.createElement('button');
   deleteButton.textContent = 'EXCLUIR';
@@ -252,7 +282,8 @@ function sortAndRenderSchedule(data) {
     scheduleBody.appendChild(createRowElement(entry));
   });
 
-  updateConflictHighlighting();
+  updateConflictHighlighting();  
+  applyDateColoring(); 
 }
 
 function initializeSchedule() {
@@ -264,7 +295,6 @@ function initializeSchedule() {
   sortAndRenderSchedule(window.scheduleData);
 
   if (isFirstLoad) {
-    console.log("PRIMEIRO CARREGAMENTO. ADICIONANDO 3 LINHAS VAZIAS.");
     addRow();
     addRow();
     addRow();

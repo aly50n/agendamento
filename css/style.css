@@ -4,25 +4,82 @@ body {
   background-color: #f3f4f6;
   padding: 20px;
 }
+
 /* Estilo para a tabela */
 .schedule-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
 }
-.schedule-table th, .schedule-table td {
+
+.schedule-table th,
+.schedule-table td {
   padding: 1rem;
   text-align: left;
   border-bottom: 1px solid #e5e7eb;
 }
+
 .schedule-table th {
   background-color: #1f2937; /* Cinza Escuro */
   color: white;
   font-weight: 600;
   text-transform: uppercase;
 }
-/* Arredondamento para os cantos da tabela */
+
+/* Arredondamento */
 .schedule-table thead tr:first-child th:first-child { border-top-left-radius: 0.5rem; }
 .schedule-table thead tr:first-child th:last-child { border-top-right-radius: 0.5rem; }
 .schedule-table tbody tr:last-child td:first-child { border-bottom-left-radius: 0.5rem; }
 .schedule-table tbody tr:last-child td:last-child { border-bottom-right-radius: 0.5rem; }
+
+/* =============================== */
+/* 📱 RESPONSIVIDADE */
+/* =============================== */
+
+@media (max-width: 768px) {
+
+  /* Remove estilo de tabela */
+  .schedule-table, 
+  .schedule-table thead, 
+  .schedule-table tbody, 
+  .schedule-table th, 
+  .schedule-table td, 
+  .schedule-table tr {
+    display: block;
+  }
+
+  /* Esconde o cabeçalho */
+  .schedule-table thead {
+    display: none;
+  }
+
+  /* Cada linha vira uma "caixa" */
+  .schedule-table tr {
+    background: white;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  }
+
+  /* Cada célula vira uma linha com label */
+  .schedule-table td {
+    border: none;
+    padding: 0.5rem 0;
+    position: relative;
+    padding-left: 50%;
+  }
+
+  /* Label antes do conteúdo (pega o nome da coluna) */
+  .schedule-table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 45%;
+    padding: 0.5rem;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+}
